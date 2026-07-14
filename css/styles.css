@@ -1,0 +1,395 @@
+/* ============================================================
+   Personal Financial Planning Scenario Planner — styles
+   Plain CSS, no frameworks. Organized top-to-bottom:
+   1. Design tokens & reset
+   2. Layout & shared elements
+   3. Form & scenario picker
+   4. Results, chart, tables
+   5. Tooltips, verdict, utilities
+   6. Responsive & print
+   ============================================================ */
+
+/* ---------- 1. Design tokens & reset ---------- */
+:root {
+  /* Colors chosen for strong contrast (WCAG AA on white) */
+  --blue: #2563eb;
+  --blue-dark: #1e40af;
+  --ink: #1f2937;          /* main text */
+  --ink-soft: #4b5563;     /* secondary text */
+  --bg: #f4f6fb;           /* page background */
+  --panel: #ffffff;
+  --border: #d4dae5;
+  --good: #166534;         /* dark green text */
+  --good-bg: #dcfce7;
+  --warn: #92400e;
+  --warn-bg: #fef3c7;
+  --bad: #991b1b;
+  --bad-bg: #fee2e2;
+
+  /* Scenario line colors (also used in JS for the chart) */
+  --c-conservative: #b45309;
+  --c-moderate: #2563eb;
+  --c-optimistic: #15803d;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+h1, h2, h3 { line-height: 1.25; }
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* ---------- 2. Layout & shared elements ---------- */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--blue-dark);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  z-index: 100;
+  border-radius: 0 0 6px 0;
+}
+.skip-link:focus { left: 0; }
+
+.site-header {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #fff;
+  padding: 2.25rem 0 2rem;
+}
+.site-header h1 { margin: 0 0 0.4rem; font-size: 1.9rem; }
+.site-header .accent { color: #bfdbfe; }
+.tagline { margin: 0; color: #dbeafe; max-width: 46rem; }
+
+.disclaimer {
+  background: var(--warn-bg);
+  border-bottom: 1px solid #f0d48a;
+  color: var(--warn);
+  padding: 0.75rem 0;
+  font-size: 0.95rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.4rem 0;
+}
+
+.btn {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--blue-dark);
+}
+.btn-secondary {
+  background: #fff;
+  color: var(--blue-dark);
+}
+.btn-secondary:hover { background: #eff6ff; }
+.btn:focus-visible,
+input:focus-visible,
+.tip:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 420px) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 2.5rem;
+}
+
+.panel {
+  min-width: 0; /* let grid children shrink on small screens */
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.panel h2 { margin-top: 0; font-size: 1.35rem; }
+.panel-intro { color: var(--ink-soft); margin-top: -0.4rem; }
+
+.site-footer {
+  background: #1f2937;
+  color: #d1d5db;
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+/* ---------- 3. Form & scenario picker ---------- */
+fieldset {
+  min-width: 0; /* fieldsets refuse to shrink below content width by default */
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1rem 0.5rem;
+  margin: 0 0 1.25rem;
+}
+legend {
+  font-weight: 700;
+  padding: 0 0.4rem;
+}
+.fieldset-hint {
+  margin: 0.1rem 0 0.9rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.field { margin-bottom: 1rem; }
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+input[type="number"] {
+  width: 100%;
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+input[type="number"][aria-invalid="true"] {
+  border-color: var(--bad);
+  background: #fff7f7;
+}
+
+.error-msg {
+  margin: 0.25rem 0 0;
+  min-height: 0;
+  font-size: 0.875rem;
+  color: var(--bad);
+  font-weight: 600;
+}
+
+/* Scenario picker: radio buttons styled as cards, still keyboard friendly */
+.scenario-picker {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.scenario-option input[type="radio"] {
+  /* Visually hidden but still focusable/announced */
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.scenario-card {
+  display: block;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.scenario-option input:checked + .scenario-card {
+  border-color: var(--blue);
+  background: #eff6ff;
+}
+.scenario-option input:focus-visible + .scenario-card {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+.scenario-name { display: block; font-weight: 700; }
+.scenario-desc { display: block; font-size: 0.85rem; color: var(--ink-soft); }
+
+.assumption-note {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  margin: 0.25rem 0 0.75rem;
+}
+
+/* ---------- 4. Results, chart, tables ---------- */
+.verdict {
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  font-size: 1.05rem;
+  margin-bottom: 1.1rem;
+  border: 1px solid transparent;
+}
+.verdict.good { background: var(--good-bg); color: var(--good); border-color: #86efac; }
+.verdict.warn { background: var(--warn-bg); color: var(--warn); border-color: #fcd34d; }
+.verdict.bad  { background: var(--bad-bg);  color: var(--bad);  border-color: #fca5a5; }
+
+.result-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  background: #fafbfe;
+}
+.result-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.result-value {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.fine-detail { font-size: 0.9rem; color: var(--ink-soft); }
+
+.chart-heading { margin: 1.6rem 0 0.6rem; font-size: 1.1rem; }
+
+.chart-wrap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem;
+  background: #fff;
+}
+#chart { display: block; width: 100%; height: 320px; }
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  color: var(--ink-soft);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+.legend-swatch {
+  width: 1.1rem; height: 0.35rem; border-radius: 2px; display: inline-block;
+}
+
+.data-details, .method-details { margin-top: 0.9rem; }
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--blue-dark);
+  padding: 0.3rem 0;
+}
+
+.table-scroll { overflow-x: auto; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+  margin-top: 0.5rem;
+}
+caption { text-align: left; color: var(--ink-soft); font-size: 0.85rem; padding-bottom: 0.4rem; }
+th, td {
+  text-align: right;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+th:first-child, td:first-child { text-align: left; }
+thead th { border-bottom: 2px solid var(--ink-soft); }
+tbody tr:nth-child(even) { background: #f8fafc; }
+
+/* ---------- 5. Tooltips, utilities ---------- */
+/* Tooltip: a small "?" button; the tip shows on hover AND keyboard focus. */
+.tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--blue-dark);
+  background: #eff6ff;
+  color: var(--blue-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: help;
+  vertical-align: middle;
+}
+.tip:hover::after,
+.tip:focus-visible::after,
+.tip.tip-open::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 400;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  z-index: 30;
+  white-space: normal;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- 6. Responsive & print ---------- */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .site-header h1 { font-size: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .result-cards { grid-template-columns: 1fr 1fr; }
+  .tip:hover::after,
+  .tip:focus-visible::after,
+  .tip.tip-open::after {
+    /* Keep tooltips on-screen on small phones */
+    left: auto;
+    right: -10px;
+    transform: none;
+    width: 200px;
+  }
+}
+
+/* Print: hide interactive chrome, keep the numbers and tables */
+@media print {
+  .site-header { background: #fff; color: #000; }
+  .site-header .accent, .tagline { color: #333; }
+  .toolbar, .skip-link, .tip, .site-footer { display: none !important; }
+  .panel { border: none; padding: 0.5rem 0; }
+  .layout { display: block; }
+  .disclaimer { border: 1px solid #999; }
+  details { display: block; }
+  details > *:not(summary) { display: block; }
+  details summary { list-style: none; }
+  body { background: #fff; }
+}

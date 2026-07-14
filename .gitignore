@@ -1,0 +1,11 @@
+# Operating system clutter
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+
+# Log and temporary files
+*.log
+*.tmp
